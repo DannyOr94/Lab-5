@@ -16,3 +16,7 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Test reports
+test-results/
+playwright-report/

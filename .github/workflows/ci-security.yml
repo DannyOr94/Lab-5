@@ -1,0 +1,40 @@
+name: CI & Pruebas de Seguridad
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-security:
+    name: Pruebas Automatizadas y Seguridad
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar navegadores Playwright con dependencias del sistema
+        run: npx playwright install --with-deps chromium
+
+      - name: Pruebas Unitarias y Saneamiento XSS (Mocha)
+        run: npm test
+
+      - name: Pruebas de Integración HTTP y WebSockets (Jest + Supertest)
+        run: npm run test:integration
+
+      - name: Pruebas End-to-End de Seguridad y Medios (Playwright)
+        run: npm run test:e2e
+
+      - name: Auditoría de Dependencias (npm audit)
+        run: npm audit --audit-level=critical || true
