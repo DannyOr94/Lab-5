@@ -1,7 +1,6 @@
 const request = require('supertest');
 const ioClient = require('socket.io-client');
-const http = require('http');
-const { app, io } = require('../../server');
+const { app, server, io } = require('../../server');
 
 describe('Pruebas de Integración - Backend Node.js y una-lib', () => {
   let serverInstance;
@@ -9,10 +8,7 @@ describe('Pruebas de Integración - Backend Node.js y una-lib', () => {
   let port;
 
   beforeAll((done) => {
-    // Iniciar servidor en puerto efímero para pruebas de socket
-    serverInstance = http.createServer(app);
-    io.attach(serverInstance);
-    serverInstance.listen(0, () => {
+    serverInstance = server.listen(0, () => {
       port = serverInstance.address().port;
       done();
     });
@@ -22,7 +18,7 @@ describe('Pruebas de Integración - Backend Node.js y una-lib', () => {
     if (socketClient && socketClient.connected) {
       socketClient.disconnect();
     }
-    io.close(() => {
+    serverInstance.close(() => {
       done();
     });
   });

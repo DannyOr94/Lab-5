@@ -4,10 +4,23 @@
 // libreriuas
 var validation = require('./libs/unalib');
 var express = require('express');
+var rateLimit = require('express-rate-limit');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var port = process.env.PORT || 3000;
+
+// Deshabilitar la cabecera X-Powered-By para mitigar fuga de información
+app.disable('x-powered-by');
+
+// Limitar la tasa de peticiones para prevenir DoS en rutas web
+var limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use(limiter);
 
 // Middleware para procesar cuerpos JSON y formularios
 app.use(express.json());
