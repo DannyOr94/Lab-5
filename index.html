@@ -5,6 +5,7 @@
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
+      #deployment-status { background: #17365d; color: #fff; padding: 9px 12px; font-size: 14px; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { border: 0; padding: 10px;}
       form button { width: 10%; background: rgb(130, 224, 255);  border: none; padding: 10px; }
@@ -18,6 +19,7 @@
     </style>
   </head>
   <body>
+    <div id="deployment-status">Prueba Git CI CD desplegada mediante GitHub Actions y Render</div>
     <ul id="messages"></ul>
     <form action="">
       <input id="nombre" autocomplete="off" placeholder="Username"/>
