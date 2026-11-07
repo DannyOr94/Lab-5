@@ -6,13 +6,14 @@ module.exports = defineConfig({
   workers: 1,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://127.0.0.1:3108',
     trace: 'on-first-retry',
   },
   webServer: {
     command: 'node server.js',
-    url: 'http://localhost:3000',
-    reuseExistingServer: true,
+    url: 'http://127.0.0.1:3108',
+    env: { PORT: '3108', AUTH0_DOMAIN: '', AUTH0_CLIENT_ID: '' },
+    reuseExistingServer: false,
   },
   projects: [
     {

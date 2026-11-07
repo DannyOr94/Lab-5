@@ -1,64 +1,105 @@
+'use strict';
 
-// npm install para descargar los paquetes...
-
-// libreriuas
 var validation = require('./libs/unalib');
 var express = require('express');
 var rateLimit = require('express-rate-limit');
+var http = require('http');
+var createAuth = require('./server/auth');
+var readAuth0ClientSecret = require('./server/vault').readAuth0ClientSecret;
+
 var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+var server = http.createServer(app);
+var io = require('socket.io')(server);
 var port = process.env.PORT || 3000;
+var auth = createAuth(process.env);
 
-// Deshabilitar la cabecera X-Powered-By para mitigar fuga de información
 app.disable('x-powered-by');
+app.use(function (_req, res, next) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 
-// Limitar la tasa de peticiones para prevenir DoS en rutas web
-var limiter = rateLimit({
+app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
   standardHeaders: true,
   legacyHeaders: false
-});
-app.use(limiter);
+}));
 
-// Middleware para procesar cuerpos JSON y formularios
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(auth.router);
 
-// root: presentar html
-app.get('/', function(req, res){
+app.get('/', function (req, res) {
+  if (auth.isReady()) {
+    var session = auth.getSession(req);
+    if (session && session.user) return res.redirect(303, '/sala');
+    return res.sendFile(__dirname + '/login.html');
+  }
+  return res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/sala', auth.requireAuth, function (_req, res) {
   res.sendFile(__dirname + '/index.html');
 });
 
-// Ruta HTTP para recibir y validar mensajes (Paso 9 - Integración con Supertest)
-app.post('/mensaje', function(req, res){
+app.post('/mensaje', auth.requireAuth, function (req, res) {
   try {
     var raw = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     var validado = validation.validarMensaje(raw);
     var resultado = JSON.parse(validado);
     res.status(200).json(resultado);
-  } catch (e) {
+  } catch (_) {
     res.status(400).json({ error: 'Error procesando el mensaje' });
   }
 });
 
-// escuchar una conexion por socket
-io.on('connection', function(socket){
-  // si se escucha "chat message"
-  socket.on('Evento-Mensaje-Server', function(msg){
+io.use(auth.socketMiddleware);
+io.on('connection', function (socket) {
+  socket.on('Evento-Mensaje-Server', function (msg) {
+    try {
+      var user = auth.isReady()
+        ? socket.data.user
+        : null;
+      if (auth.isReady() && !user) {
+        socket.disconnect(true);
+        return;
+      }
 
-    msg =  validation.validarMensaje(msg);
-    // volvemos a emitir el mismo mensaje
-    io.emit('Evento-Mensaje-Server', msg);
+      var input = typeof msg === 'string' ? JSON.parse(msg) : msg;
+      if (!input || typeof input !== 'object' || Array.isArray(input)) return;
+      if (user) input.nombre = user.name;
+      var validated = validation.validarMensaje(JSON.stringify(input));
+      io.emit('Evento-Mensaje-Server', validated);
+    } catch (_) {
+      socket.emit('chat:error', { error: 'invalid_message' });
+    }
   });
 });
 
-if (require.main === module) {
-  http.listen(port, function(){
-    console.log('listening on *:' + port);
+async function start() {
+  if (auth.hasConfig()) {
+    var secret = await readAuth0ClientSecret();
+    auth.setClientSecret(secret);
+  }
+
+  return new Promise(function (resolve, reject) {
+    server.once('error', reject);
+    server.listen(port, function () {
+      server.removeListener('error', reject);
+      console.log('listening on *:' + port);
+      resolve(server);
+    });
   });
 }
 
-module.exports = { app: app, server: http, io: io };
+if (require.main === module) {
+  start().catch(function (error) {
+    var code = error && (error.code || error.message);
+    console.error('Server initialization failed:', code || 'unknown_error');
+    process.exitCode = 1;
+  });
+}
 
+module.exports = { app: app, server: server, io: io, auth: auth, start: start };

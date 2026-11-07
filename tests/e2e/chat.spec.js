@@ -5,10 +5,10 @@ test.describe('Pruebas End-to-End - UNA Chat', () => {
   test('Enviar una URL de imagen y verificar que la imagen se muestra y termina de cargar en el chat', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByPlaceholder('Username').fill('UsuarioImagen');
+    await page.getByPlaceholder('Nombre').fill('UsuarioImagen');
     const imageUrl = 'https://picsum.photos/200/200.jpg';
     await page.getByPlaceholder('Escriba un mensaje').fill(imageUrl);
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Enviar' }).click();
 
     // Verificar que la imagen aparezca en la lista de mensajes
     const imgLocator = page.locator('#messages img').last();
@@ -26,10 +26,10 @@ test.describe('Pruebas End-to-End - UNA Chat', () => {
   test('Enviar una URL de video y verificar que el reproductor aparece y carga el contenido', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByPlaceholder('Username').fill('UsuarioVideo');
+    await page.getByPlaceholder('Nombre').fill('UsuarioVideo');
     const videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
     await page.getByPlaceholder('Escriba un mensaje').fill(videoUrl);
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Enviar' }).click();
 
     // Verificar que el reproductor de video aparezca en el chat
     const videoLocator = page.locator('#messages video').last();
@@ -61,10 +61,10 @@ test.describe('Pruebas End-to-End - UNA Chat', () => {
       await dialog.dismiss();
     });
 
-    await page.getByPlaceholder('Username').fill('Atacante');
+    await page.getByPlaceholder('Nombre').fill('Atacante');
     const maliciousScript = "<script>alert('Inyección de script');</script>";
     await page.getByPlaceholder('Escriba un mensaje').fill(maliciousScript);
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Enviar' }).click();
 
     // Esperar a que el mensaje aparezca en la lista
     const lastMessage = page.locator('#messages li').last();

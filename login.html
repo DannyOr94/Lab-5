@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sesión · UNA Chat</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f3f6fa; color: #172033; font: 16px system-ui, sans-serif; }
+      main { width: min(92vw, 440px); padding: 2rem; border: 1px solid #d9e1ec; border-radius: 16px; background: #fff; box-shadow: 0 12px 40px #15253a14; }
+      h1 { margin-top: 0; font-size: 1.7rem; }
+      p { line-height: 1.5; color: #475569; }
+      a.button { display: inline-block; padding: .8rem 1.1rem; border-radius: 8px; background: #14532d; color: white; text-decoration: none; font-weight: 650; }
+      #status { min-height: 1.5rem; margin: 1rem 0; color: #475569; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>UNA Chat</h1>
+      <p>Inicia sesión con Auth0 para entrar a la sala.</p>
+      <p id="status" role="status">Comprobando configuración…</p>
+      <a class="button" id="login" href="/auth/login" hidden>Iniciar sesión</a>
+    </main>
+    <script>
+      (async function () {
+        const status = document.getElementById('status');
+        const login = document.getElementById('login');
+        try {
+          const response = await fetch('/auth/config', { credentials: 'same-origin' });
+          const config = await response.json();
+          if (config.enabled) {
+            status.textContent = 'Autenticación lista.';
+            login.hidden = false;
+            return;
+          }
+          status.textContent = 'La autenticación todavía no está configurada.';
+        } catch (_) {
+          status.textContent = 'No se pudo comprobar la configuración de autenticación.';
+        }
+      }());
+    </script>
+  </body>
+</html>

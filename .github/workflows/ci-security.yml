@@ -2,7 +2,7 @@ name: CI & Pruebas de Seguridad
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, lab8-vault-auth0 ]
   pull_request:
     branches: [ main ]
 
